@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 
@@ -28,6 +29,8 @@ public class App {
 
         output = encrypt3(input, key16);
         System.out.println("Encrypted: " + output);
+        output = decrypt3(output, key16);
+        System.out.println("Decrypted: " + output);
     }
 
     // returns 16 byte init vector followed by encrypted data
@@ -43,6 +46,26 @@ public class App {
 
             byte[] encrypted = cipher.doFinal(input.getBytes());
             return Base64.getEncoder().encodeToString(concat(iv.getBytes(StandardCharsets.UTF_8), encrypted));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // assumes 16 byte init vector followed by encrypted data
+    public static String decrypt3(final String input, final String key) {
+        try {
+            if (key.length() != 16)
+                throw new RuntimeException("Key must be 16 characters");
+            byte[] encryptedBytes = Base64.getDecoder().decode(input);
+            String iv = new String(encryptedBytes, 0, 16, StandardCharsets.UTF_8);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+            byte[] decrypted = cipher.doFinal(Arrays.copyOfRange(encryptedBytes, 16, encryptedBytes.length));
+            return new String(decrypted, StandardCharsets.UTF_8);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

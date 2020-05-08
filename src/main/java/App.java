@@ -126,6 +126,7 @@ public class App {
         return outputStream.toByteArray();
     }
 
+    // use letters here, possible cross-environment region with java signed bytes and .NET unsigned bytes, keep in simple
     private static String getInitVector() {
         // return 16 random letters
         Random random = new Random();

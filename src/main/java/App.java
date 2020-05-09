@@ -15,6 +15,7 @@ public class App {
 
         var key = "JDHQINFAFB12JSKDFOWOW023@3432FKDSF";
         var key16 = "JDHQINFAFB12JSKD";
+        var key32 = "JDHQINFAFB12JSKDJDHQINFAFB12JSKD";
         var iv = "1234567890123456";
         var input = "EBjr2XRWtQu9Oag_IMq1Kv1EcPw.*AAJTSQACMDIAAlNLABx4TEZlWC9Iams0ZUZIWlNlSGxkSTM1VitwY0E9AAJTMQACMDU.*";
         var output = encrypt(input, key);
@@ -27,17 +28,17 @@ public class App {
         output = decrypt2(output, key16, iv);
         System.out.println("Decrypted: " + output);
 
-        output = encrypt3(input, key16);
+        output = encrypt3(input, key32);
         System.out.println("Encrypted: " + output);
-        output = decrypt3(output, key16);
+        output = decrypt3(output, key32);
         System.out.println("Decrypted: " + output);
     }
 
     // returns 16 byte init vector followed by encrypted data
     public static String encrypt3(final String input, final String key) {
         try {
-            if (key.length() != 16)
-                throw new RuntimeException("Key must be 16 characters");
+            if (key.length() != 32)
+                throw new RuntimeException("Key must be 32 characters");
             String iv = getInitVector();
             IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
             SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
@@ -55,8 +56,8 @@ public class App {
     // assumes 16 byte init vector followed by encrypted data
     public static String decrypt3(final String input, final String key) {
         try {
-            if (key.length() != 16)
-                throw new RuntimeException("Key must be 16 characters");
+            if (key.length() != 32)
+                throw new RuntimeException("Key must be 32 characters");
             byte[] encryptedBytes = Base64.getDecoder().decode(input);
             String iv = new String(encryptedBytes, 0, 16, StandardCharsets.UTF_8);
             IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));

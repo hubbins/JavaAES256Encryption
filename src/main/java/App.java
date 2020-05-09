@@ -6,6 +6,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
@@ -24,14 +25,56 @@ public class App {
         System.out.println("Decrypted: " + output);
 
         output = encrypt2(input, key16, iv);
-        System.out.println("Encrypted: " + output);
+        System.out.println("Encrypted2: " + output);
         output = decrypt2(output, key16, iv);
-        System.out.println("Decrypted: " + output);
+        System.out.println("Decrypted2: " + output);
 
         output = encrypt3(input, key32);
-        System.out.println("Encrypted: " + output);
+        System.out.println("Encrypted3: " + output);
         output = decrypt3(output, key32);
-        System.out.println("Decrypted: " + output);
+        System.out.println("Decrypted3: " + output);
+
+        output = encrypt4(input, key);
+        System.out.println("Encrypted4: " + output);
+        output = decrypt4(output, key);
+        System.out.println("Decrypted4: " + output);
+    }
+
+    // returns 16 byte init vector followed by encrypted data
+    public static String encrypt4(final String input, final String key) {
+        try {
+            byte[] keyHash = MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8));
+            String iv = getInitVector();
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+            SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash, "AES");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+            byte[] encrypted = cipher.doFinal(input.getBytes());
+            return Base64.getEncoder().encodeToString(concat(iv.getBytes(StandardCharsets.UTF_8), encrypted));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // assumes 16 byte init vector followed by encrypted data
+    public static String decrypt4(final String input, final String key) {
+        try {
+            byte[] keyHash = MessageDigest.getInstance("SHA-256").digest(key.getBytes(StandardCharsets.UTF_8));
+            byte[] encryptedBytes = Base64.getDecoder().decode(input);
+            String iv = new String(encryptedBytes, 0, 16, StandardCharsets.UTF_8);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+            SecretKeySpec secretKeySpec = new SecretKeySpec(keyHash, "AES");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+            byte[] decrypted = cipher.doFinal(Arrays.copyOfRange(encryptedBytes, 16, encryptedBytes.length));
+            return new String(decrypted, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     // returns 16 byte init vector followed by encrypted data
